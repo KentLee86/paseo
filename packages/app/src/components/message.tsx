@@ -97,7 +97,8 @@ import {
   AttachmentLabel,
   AttachmentThumbnail,
 } from "@/components/attachment-pill";
-import { AttachmentLightbox } from "@/components/attachment-lightbox";
+import { attachmentLightboxSource, type LightboxSource } from "@/components/lightbox/source";
+import { useOpenLightbox } from "@/stores/lightbox-store";
 import type { DaemonClient } from "@getpaseo/client/internal/daemon-client";
 import { isWeb, isNative } from "@/constants/platform";
 import type { AgentCapabilityFlags } from "@getpaseo/protocol/agent-types";
@@ -432,8 +433,11 @@ export const UserMessage = memo(function UserMessage({
   const isCompact = useIsCompactFormFactor();
   const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
-  const [lightboxMetadata, setLightboxMetadata] = useState<UserMessageImageAttachment | null>(null);
-  const handleLightboxClose = useCallback(() => setLightboxMetadata(null), []);
+  const openLightbox = useOpenLightbox();
+  const handleOpenImage = useCallback(
+    (image: UserMessageImageAttachment) => openLightbox(attachmentLightboxSource(image)),
+    [openLightbox],
+  );
   const resolvedDisableOuterSpacing = useDisableOuterSpacing(disableOuterSpacing);
   const hasText = message.trim().length > 0;
   const hasImages = images.length > 0;
@@ -504,7 +508,7 @@ export const UserMessage = memo(function UserMessage({
                 <UserMessageImagePill
                   key={image.id}
                   image={image}
-                  onOpen={setLightboxMetadata}
+                  onOpen={handleOpenImage}
                   accessibilityLabel={t("composer.attachments.openImage")}
                 />
               ))}
@@ -559,7 +563,6 @@ export const UserMessage = memo(function UserMessage({
           </View>
         ) : null}
       </View>
-      <AttachmentLightbox metadata={lightboxMetadata} onClose={handleLightboxClose} />
     </View>
   );
 });
@@ -815,6 +818,7 @@ function AssistantMarkdownImage({
     }),
     [hasLeadingContent],
   );
+  const { t } = useTranslation();
   const image = useAssistantImage({
     source,
     occurrenceKey,
@@ -822,6 +826,13 @@ function AssistantMarkdownImage({
     workspaceRoot,
     serverId,
   });
+  const openLightbox = useOpenLightbox();
+  const lightboxSource: LightboxSource | null = image.status === "failed" ? null : image.lightbox;
+  const handlePress = useCallback(() => {
+    if (lightboxSource) {
+      openLightbox(alt ? { ...lightboxSource, alt } : lightboxSource);
+    }
+  }, [alt, lightboxSource, openLightbox]);
   const binding = image.status === "failed" ? null : image.binding;
   const aspectRatio = image.status === "failed" ? null : image.aspectRatio;
   const imageUri = binding?.uri ?? "";
@@ -869,12 +880,25 @@ function AssistantMarkdownImage({
 
   return (
     <View style={frameStyle}>
-      <View style={surfaceStyle} accessibilityRole="image" accessibilityLabel={alt}>
+      {/* The surface is the pressable rather than a wrapper around one: a nested Pressable would
+          give the image two overlapping press targets. */}
+      <Pressable
+        testID="assistant-image-open"
+        // The image itself carries the `img` role and the alt text; the wrapper only announces
+        // itself when there is actually something to open, so the name is not duplicated.
+        accessibilityRole={lightboxSource ? "button" : undefined}
+        accessibilityLabel={lightboxSource ? t("message.attachments.openImage") : undefined}
+        disabled={!lightboxSource}
+        onPress={handlePress}
+        style={surfaceStyle}
+      >
         <Image
           ref={binding.onRef}
           source={imageSource}
           style={assistantMessageStylesheet.image}
           resizeMode="contain"
+          accessibilityRole="image"
+          accessibilityLabel={alt}
           onLoad={binding.onLoad}
           onError={binding.onError}
         />
@@ -883,7 +907,7 @@ function AssistantMarkdownImage({
             <ThemedLoadingSpinner size="small" uniProps={foregroundMutedColorMapping} />
           </View>
         ) : null}
-      </View>
+      </Pressable>
     </View>
   );
 }

@@ -282,6 +282,7 @@ export const es: TranslationResources = {
       dismissImage: "Descartar imagen",
       closeImage: "Cerrar imagen",
       imageLoadFailed: "No se pudo cargar la imagen",
+      openImage: "Abrir imagen",
       imageUnavailable: "Imagen no disponible",
       imagePreviewUnavailable: "Vista previa de la imagen no disponible.",
       imagePreviewLoadFailed: "No se puede cargar la vista previa de la imagen.",
@@ -1589,6 +1590,7 @@ export const es: TranslationResources = {
       loading: "Cargando archivo...",
       noPreview: "No hay vista previa disponible",
       binaryPreviewUnavailable: "Vista previa binaria no disponible",
+      openImage: "Abrir imagen",
       failedToLoad: "No se pudo cargar el archivo",
       failedToLoadPreview: "No se pudo cargar la vista previa del archivo",
       editor: {

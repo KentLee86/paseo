@@ -279,6 +279,7 @@ export const ar: TranslationResources = {
       dismissImage: "تجاهل الصورة",
       closeImage: "إغلاق الصورة",
       imageLoadFailed: "تعذر تحميل الصورة",
+      openImage: "فتح الصورة",
       imageUnavailable: "الصورة غير متاحة",
       imagePreviewUnavailable: "معاينة الصورة غير متاحة.",
       imagePreviewLoadFailed: "غير قادر على تحميل معاينة الصورة.",
@@ -1546,6 +1547,7 @@ export const ar: TranslationResources = {
       loading: "جارٍ تحميل الملف...",
       noPreview: "لا تتوفر معاينة",
       binaryPreviewUnavailable: "المعاينة الثنائية غير متاحة",
+      openImage: "فتح الصورة",
       failedToLoad: "فشل تحميل الملف",
       failedToLoadPreview: "فشل تحميل معاينة الملف",
       editor: {

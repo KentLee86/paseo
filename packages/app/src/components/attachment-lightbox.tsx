@@ -1,33 +1,43 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
-import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { StyleSheet, withUnistyles } from "react-native-unistyles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Image as ExpoImage } from "expo-image";
 import { X } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
-import type { AttachmentMetadata } from "@/attachments/types";
 import { useAttachmentPreviewUrl } from "@/attachments/use-attachment-preview-url";
 import { isWeb } from "@/constants/platform";
+import type { Theme } from "@/styles/theme";
 import { WindowChromeRootRegion, WindowChromeSafeArea } from "@/utils/desktop-window";
+import type { LightboxSource } from "./lightbox/source";
+import { ZoomSurface } from "./lightbox/zoom-surface";
 
 interface AttachmentLightboxProps {
-  metadata: AttachmentMetadata | null;
+  source: LightboxSource | null;
   onClose: () => void;
 }
 
-export function AttachmentLightbox({ metadata, onClose }: AttachmentLightboxProps) {
-  const { theme } = useUnistyles();
+export function AttachmentLightbox({ source, onClose }: AttachmentLightboxProps) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const url = useAttachmentPreviewUrl(metadata);
+  // Resolved here rather than by the opener: this component holds the reference for as long as it
+  // shows the image, so a blob URL cannot be revoked out from under it.
+  const attachment = source?.kind === "attachment" ? source.metadata : null;
+  const previewUrl = useAttachmentPreviewUrl(attachment);
+  const url = source?.kind === "uri" ? source.uri : previewUrl;
   const [errored, setErrored] = useState(false);
+  // Once the image is zoomed the backdrop stops closing: a drag that overshoots the image is a
+  // pan that ran out of picture, not a click on the background.
+  const [zoomed, setZoomed] = useState(false);
+
+  const sourceKey = source?.kind === "attachment" ? source.metadata.id : (source?.uri ?? null);
 
   useEffect(() => {
     setErrored(false);
-  }, [metadata?.id]);
+    setZoomed(false);
+  }, [sourceKey]);
 
   useEffect(() => {
-    if (!isWeb || !metadata) return;
+    if (!isWeb || !source) return;
     function handleKeydown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         onClose();
@@ -37,27 +47,20 @@ export function AttachmentLightbox({ metadata, onClose }: AttachmentLightboxProp
     return () => {
       window.removeEventListener("keydown", handleKeydown);
     };
-  }, [metadata, onClose]);
+  }, [source, onClose]);
 
   const closeButtonRowStyle = useMemo(
-    () => [
-      styles.closeButtonRow,
-      {
-        top: insets.top + theme.spacing[3],
-      },
-    ],
-    [insets.top, theme.spacing],
+    () => [styles.closeButtonRow, { top: insets.top + CHROME_INSET }],
+    [insets.top],
   );
   const closeButtonStyle = useMemo(
-    () => [styles.closeButton, { marginRight: insets.right + theme.spacing[3] }],
-    [insets.right, theme.spacing],
+    () => [styles.closeButton, { marginRight: insets.right + CHROME_INSET }],
+    [insets.right],
   );
 
   const handleImageError = useCallback(() => setErrored(true), []);
-  const noopPress = useCallback(() => {}, []);
-  const imageSource = useMemo(() => ({ uri: url ?? "" }), [url]);
 
-  if (!metadata) {
+  if (!source) {
     return null;
   }
 
@@ -71,7 +74,8 @@ export function AttachmentLightbox({ metadata, onClose }: AttachmentLightboxProp
             testID="attachment-lightbox-backdrop"
             accessibilityRole="button"
             accessibilityLabel={t("message.attachments.dismissImage")}
-            onPress={onClose}
+            onPress={zoomed ? undefined : onClose}
+            disabled={zoomed}
             style={styles.backdrop}
           />
           <View style={styles.contentLayer}>
@@ -79,15 +83,14 @@ export function AttachmentLightbox({ metadata, onClose }: AttachmentLightboxProp
               {hasError ? (
                 <Text style={styles.errorText}>{t("message.attachments.imageLoadFailed")}</Text>
               ) : (
-                <Pressable onPress={noopPress} style={styles.imagePressable}>
-                  <ExpoImage
-                    testID="attachment-lightbox-image"
-                    source={imageSource}
-                    contentFit="contain"
+                <View testID="attachment-lightbox-viewport" style={styles.viewport}>
+                  <ZoomSurface
+                    uri={url}
+                    alt={source.alt ?? attachment?.fileName ?? undefined}
                     onError={handleImageError}
-                    style={imageFillStyle}
+                    onZoomedChange={setZoomed}
                   />
-                </Pressable>
+                </View>
               )}
             </View>
             <WindowChromeSafeArea placement="inline" style={closeButtonRowStyle}>
@@ -99,7 +102,7 @@ export function AttachmentLightbox({ metadata, onClose }: AttachmentLightboxProp
                 onPress={onClose}
                 style={closeButtonStyle}
               >
-                <X size={16} color={theme.colors.foregroundMuted} />
+                <ThemedX size={16} uniProps={iconForegroundMutedMapping} />
               </Pressable>
             </WindowChromeSafeArea>
           </View>
@@ -109,13 +112,11 @@ export function AttachmentLightbox({ metadata, onClose }: AttachmentLightboxProp
   );
 }
 
-const imageFillStyle = {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-} as const;
+const ThemedX = withUnistyles(X);
+const iconForegroundMutedMapping = (theme: Theme) => ({ color: theme.colors.foregroundMuted });
+
+/** `theme.spacing[3]`, inlined so the safe-area offsets do not need a theme hook. */
+const CHROME_INSET = 12;
 
 const styles = StyleSheet.create((theme) => ({
   root: {
@@ -151,12 +152,15 @@ const styles = StyleSheet.create((theme) => ({
     padding: theme.spacing[4],
     pointerEvents: "box-none",
   },
-  imagePressable: {
+  /**
+   * The viewport fills the modal rather than capping at a fixed size: a zoomable image that is
+   * letterboxed into 960x640 wastes the screen the zoom exists to use.
+   */
+  viewport: {
     flex: 1,
     width: "100%",
     alignSelf: "center",
-    maxWidth: 960,
-    maxHeight: 640,
+    overflow: "hidden",
   },
   errorText: {
     color: theme.colors.foregroundMuted,

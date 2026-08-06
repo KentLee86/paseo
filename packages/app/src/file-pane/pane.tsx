@@ -9,7 +9,7 @@ import React, {
   useSyncExternalStore,
 } from "react";
 import type { DaemonClient, FileReadResult } from "@getpaseo/client/internal/daemon-client";
-import { Image as RNImage, ScrollView as RNScrollView, Text, View } from "react-native";
+import { Image as RNImage, Pressable, ScrollView as RNScrollView, Text, View } from "react-native";
 import { StyleSheet, UnistylesRuntime, withUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 import { MarkdownRenderer } from "@/components/markdown/renderer";
@@ -23,6 +23,8 @@ import { CODE_SURFACE_DATASET } from "@/styles/code-surface";
 import { filePreviewRenderKind } from "@/components/file-pane-render-mode";
 import type { AttachmentMetadata } from "@/attachments/types";
 import { useAttachmentPreviewUrl } from "@/attachments/use-attachment-preview-url";
+import { attachmentLightboxSource } from "@/components/lightbox/source";
+import { useOpenLightbox } from "@/stores/lightbox-store";
 import { persistAttachmentFromBytes } from "@/attachments/service";
 import { createPreviewAttachmentId, getFileNameFromPath } from "@/attachments/utils";
 import { explorerFileFromReadResult } from "@/file-explorer/read-result";
@@ -65,6 +67,7 @@ interface FilePreviewBodyProps {
   location: WorkspaceFileLocation;
   navigationRevision: number;
   imagePreviewUri: string | null;
+  imageAttachment: AttachmentMetadata | null;
 }
 
 type TextExplorerFile = ExplorerFile & { kind: "text" };
@@ -217,6 +220,7 @@ function FilePreviewBody({
   location,
   navigationRevision,
   imagePreviewUri,
+  imageAttachment,
 }: FilePreviewBodyProps) {
   const theme = UnistylesRuntime.getTheme();
   const { t } = useTranslation();
@@ -258,6 +262,12 @@ function FilePreviewBody({
     () => (imagePreviewUri ? { uri: imagePreviewUri } : null),
     [imagePreviewUri],
   );
+  const openLightbox = useOpenLightbox();
+  const handleOpenImage = useCallback(() => {
+    if (imageAttachment) {
+      openLightbox(attachmentLightboxSource(imageAttachment));
+    }
+  }, [imageAttachment, openLightbox]);
 
   useEffect(() => {
     if (!lineSelection) {
@@ -380,11 +390,19 @@ function FilePreviewBody({
           contentContainerStyle={styles.previewImageScrollContent}
           showsVerticalScrollIndicator
         >
-          <RNImage
-            source={imageSource ?? undefined}
-            style={styles.previewImage}
-            resizeMode="contain"
-          />
+          <Pressable
+            testID="file-pane-image-open"
+            accessibilityRole={imageAttachment ? "button" : "image"}
+            accessibilityLabel={t("panels.file.openImage")}
+            disabled={!imageAttachment}
+            onPress={handleOpenImage}
+          >
+            <RNImage
+              source={imageSource ?? undefined}
+              style={styles.previewImage}
+              resizeMode="contain"
+            />
+          </Pressable>
         </RNScrollView>
       </View>
     );
@@ -471,9 +489,9 @@ export function FilePane({
   useEffect(() => setPreviewMode("preview"), [previewKey]);
 
   const preview = resolvedPreview.key === previewKey ? resolvedPreview.file : null;
-  const imagePreviewUri = useAttachmentPreviewUrl(
-    resolvedPreview.key === previewKey ? resolvedPreview.imageAttachment : null,
-  );
+  const imageAttachment =
+    resolvedPreview.key === previewKey ? resolvedPreview.imageAttachment : null;
+  const imagePreviewUri = useAttachmentPreviewUrl(imageAttachment);
   const isRenderable = isRenderablePreview(preview, location.path);
   const editable = isEditableTextFile({
     preview,
@@ -506,6 +524,7 @@ export function FilePane({
       location={location}
       navigationRevision={navigationRevision}
       imagePreviewUri={imagePreviewUri}
+      imageAttachment={imageAttachment}
     />
   );
 }
@@ -553,6 +572,7 @@ function FilePanePresentation({
   location,
   navigationRevision,
   imagePreviewUri,
+  imageAttachment,
 }: {
   serverId: string;
   client: DaemonClient | null;
@@ -574,6 +594,7 @@ function FilePanePresentation({
   location: WorkspaceFileLocation;
   navigationRevision: number;
   imagePreviewUri: string | null;
+  imageAttachment: AttachmentMetadata | null;
 }) {
   if (!client && readTarget) {
     return (
@@ -638,6 +659,7 @@ function FilePanePresentation({
         location={location}
         navigationRevision={navigationRevision}
         imagePreviewUri={imagePreviewUri}
+        imageAttachment={imageAttachment}
       />
     </View>
   );
@@ -811,6 +833,7 @@ function EditableFilePane({
           location={location}
           navigationRevision={navigationRevision}
           imagePreviewUri={null}
+          imageAttachment={null}
         />
       )}
     </View>

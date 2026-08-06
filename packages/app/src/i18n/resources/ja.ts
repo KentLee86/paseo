@@ -282,6 +282,7 @@ export const ja: TranslationResources = {
       dismissImage: "画像を閉じる",
       closeImage: "画像を閉じる",
       imageLoadFailed: "画像を読み込めませんでした",
+      openImage: "画像を開く",
       imageUnavailable: "画像が利用できません",
       imagePreviewUnavailable: "画像プレビューは利用できません。",
       imagePreviewLoadFailed: "画像プレビューを読み込めません。",
@@ -1562,6 +1563,7 @@ export const ja: TranslationResources = {
       loading: "ファイルを読み込み中...",
       noPreview: "プレビューが利用できません",
       binaryPreviewUnavailable: "バイナリプレビューが利用できません",
+      openImage: "画像を開く",
       failedToLoad: "ファイルの読み込みに失敗しました",
       failedToLoadPreview: "ファイルプレビューの読み込みに失敗しました",
       editor: {

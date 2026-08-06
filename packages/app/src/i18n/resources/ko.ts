@@ -280,6 +280,7 @@ export const ko: TranslationResources = {
       dismissImage: "이미지 닫기",
       closeImage: "이미지 닫기",
       imageLoadFailed: "이미지를 불러올 수 없습니다",
+      openImage: "이미지 열기",
       imageUnavailable: "이미지를 사용할 수 없습니다",
       imagePreviewUnavailable: "이미지 미리보기를 사용할 수 없습니다.",
       imagePreviewLoadFailed: "이미지 미리보기를 불러올 수 없습니다.",
@@ -1556,6 +1557,7 @@ export const ko: TranslationResources = {
       loading: "파일 불러오는 중...",
       noPreview: "사용 가능한 미리보기가 없습니다",
       binaryPreviewUnavailable: "바이너리 미리보기를 사용할 수 없습니다",
+      openImage: "이미지 열기",
       failedToLoad: "파일을 불러오지 못했습니다",
       failedToLoadPreview: "파일 미리보기를 불러오지 못했습니다",
       editor: {

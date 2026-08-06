@@ -279,6 +279,7 @@ export const zhCN: TranslationResources = {
       dismissImage: "关闭图片",
       closeImage: "关闭图片",
       imageLoadFailed: "无法加载图片",
+      openImage: "打开图片",
       imageUnavailable: "图片不可用",
       imagePreviewUnavailable: "图片预览不可用。",
       imagePreviewLoadFailed: "无法加载图片预览。",
@@ -1526,6 +1527,7 @@ export const zhCN: TranslationResources = {
       loading: "正在加载文件...",
       noPreview: "没有可用预览",
       binaryPreviewUnavailable: "二进制预览不可用",
+      openImage: "打开图片",
       failedToLoad: "加载文件失败",
       failedToLoadPreview: "加载文件预览失败",
       editor: {

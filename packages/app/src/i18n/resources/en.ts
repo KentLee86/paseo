@@ -278,6 +278,7 @@ export const en = {
       dismissImage: "Dismiss image",
       closeImage: "Close image",
       imageLoadFailed: "Couldn't load image",
+      openImage: "Open image",
       imageUnavailable: "Image unavailable",
       imagePreviewUnavailable: "Image preview unavailable.",
       imagePreviewLoadFailed: "Unable to load image preview.",
@@ -1557,6 +1558,7 @@ export const en = {
       loading: "Loading file...",
       noPreview: "No preview available",
       binaryPreviewUnavailable: "Binary preview unavailable",
+      openImage: "Open image",
       failedToLoad: "Failed to load file",
       failedToLoadPreview: "Failed to load file preview",
       editor: {

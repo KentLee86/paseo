@@ -282,6 +282,7 @@ export const ptBR: TranslationResources = {
       dismissImage: "Dispensar imagem",
       closeImage: "Fechar imagem",
       imageLoadFailed: "Não foi possível carregar a imagem",
+      openImage: "Abrir imagem",
       imageUnavailable: "Imagem indisponível",
       imagePreviewUnavailable: "Prévia da imagem indisponível.",
       imagePreviewLoadFailed: "Não foi possível carregar a prévia da imagem.",
@@ -1575,6 +1576,7 @@ export const ptBR: TranslationResources = {
       loading: "Carregando arquivo...",
       noPreview: "Nenhuma prévia disponível",
       binaryPreviewUnavailable: "Prévia binária indisponível",
+      openImage: "Abrir imagem",
       failedToLoad: "Falha ao carregar arquivo",
       failedToLoadPreview: "Falha ao carregar prévia do arquivo",
       editor: {

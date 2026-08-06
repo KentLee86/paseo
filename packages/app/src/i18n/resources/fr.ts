@@ -283,6 +283,7 @@ export const fr: TranslationResources = {
       dismissImage: "Ignorer l'image",
       closeImage: "Fermer l'image",
       imageLoadFailed: "Impossible de charger l'image",
+      openImage: "Ouvrir l'image",
       imageUnavailable: "Image indisponible",
       imagePreviewUnavailable: "Aperçu de l'image indisponible.",
       imagePreviewLoadFailed: "Impossible de charger l'aperçu de l'image.",
@@ -1593,6 +1594,7 @@ export const fr: TranslationResources = {
       loading: "Chargement du fichier...",
       noPreview: "Aucun aperçu disponible",
       binaryPreviewUnavailable: "Aperçu binaire indisponible",
+      openImage: "Ouvrir l'image",
       failedToLoad: "Échec du chargement du fichier",
       failedToLoadPreview: "Échec du chargement de l'aperçu du fichier",
       editor: {

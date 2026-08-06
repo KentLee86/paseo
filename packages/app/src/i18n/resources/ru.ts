@@ -281,6 +281,7 @@ export const ru: TranslationResources = {
       dismissImage: "Закрыть изображение",
       closeImage: "Закрыть изображение",
       imageLoadFailed: "Не удалось загрузить изображение",
+      openImage: "Открыть изображение",
       imageUnavailable: "Изображение недоступно",
       imagePreviewUnavailable: "Предварительный просмотр изображения недоступен.",
       imagePreviewLoadFailed: "Невозможно загрузить предварительный просмотр изображения.",
@@ -1580,6 +1581,7 @@ export const ru: TranslationResources = {
       loading: "Загрузка файла...",
       noPreview: "Предварительный просмотр недоступен",
       binaryPreviewUnavailable: "Предварительный просмотр двоичного файла недоступен.",
+      openImage: "Открыть изображение",
       failedToLoad: "Не удалось загрузить файл",
       failedToLoadPreview: "Не удалось загрузить предварительный просмотр файла.",
       editor: {

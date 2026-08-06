@@ -1,4 +1,6 @@
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { attachmentLightboxSource } from "@/components/lightbox/source";
+import { useOpenLightbox } from "@/stores/lightbox-store";
 import {
   View,
   Pressable,
@@ -100,7 +102,6 @@ import { useAppSettings } from "@/hooks/use-settings";
 import { isWeb, isNative } from "@/constants/platform";
 import type { ForgeSearchItem } from "@getpaseo/protocol/messages";
 import type {
-  AttachmentMetadata,
   ComposerAttachment,
   UserComposerAttachment,
   WorkspaceFileComposerAttachment,
@@ -114,7 +115,6 @@ import { droppedItemsToPickedFiles } from "@/composer/attachments/drop";
 import { getFileTypeLabel } from "@/attachments/file-types";
 import { Combobox, ComboboxItem, type ComboboxOption } from "@/components/ui/combobox";
 import { AttachmentLabel, AttachmentPill, AttachmentThumbnail } from "@/components/attachment-pill";
-import { AttachmentLightbox } from "@/components/attachment-lightbox";
 import { openExternalUrl } from "@/utils/open-external-url";
 import { useIsDictationReady } from "@/hooks/use-is-dictation-ready";
 import { useForgeSearchQuery } from "@/git/use-forge-search-query";
@@ -1119,7 +1119,6 @@ export function Composer({
   const [isMessageInputFocused, setIsMessageInputFocused] = useState(false);
   const [isGithubPickerOpen, setIsGithubPickerOpen] = useState(false);
   const [githubSearchQuery, setGithubSearchQuery] = useState("");
-  const [lightboxMetadata, setLightboxMetadata] = useState<AttachmentMetadata | null>(null);
   const attachButtonRef = useRef<View | null>(null);
   const messageInputRef = useRef<MessageInputRef>(null);
   const isComposerLocked = resolveIsComposerLocked(submitBehavior, isSubmitLoading);
@@ -1534,18 +1533,19 @@ export function Composer({
     [githubAutoAttach, removeAttachment, selectedAttachments, setSelectedAttachments],
   );
 
+  const openLightbox = useOpenLightbox();
   const handleOpenAttachment = useCallback(
     (attachment: ComposerAttachment) => {
       openComposerAttachment({
         attachment,
-        setLightboxMetadata,
+        setLightboxMetadata: (metadata) => openLightbox(attachmentLightboxSource(metadata)),
         openWorkspaceAttachment: openAttachment,
         openExternalUrl: (url) => {
           void openExternalUrl(url);
         },
       });
     },
-    [openAttachment],
+    [openAttachment, openLightbox],
   );
 
   const handleCancelAgent = useCallback(() => {
@@ -1947,10 +1947,6 @@ export function Composer({
     [onAttentionInputFocus],
   );
 
-  const handleLightboxClose = useCallback(() => {
-    setLightboxMetadata(null);
-  }, []);
-
   const handleGithubPickerOpenChange = useCallback(
     (open: boolean) => {
       setIsGithubPickerOpen(open);
@@ -2056,7 +2052,6 @@ export function Composer({
   return (
     <ComposerKeyboardScopeProvider isActiveComposer={isPaneFocused}>
       <Animated.View style={composerContainerStyle}>
-        <AttachmentLightbox metadata={lightboxMetadata} onClose={handleLightboxClose} />
         {/* Input area */}
         <View style={inputAreaContainerStyle}>
           <View style={styles.inputAreaContent}>

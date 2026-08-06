@@ -41,6 +41,7 @@ import { RootErrorBoundary } from "@/components/root-error-boundary";
 import { WorkspaceSetupDialog } from "@/components/workspace-setup-dialog";
 import { WorkspaceShortcutTargetsSubscriber } from "@/components/workspace-shortcut-targets-subscriber";
 import { FloatingPanelPortalHost } from "@/components/ui/floating-panel-portal";
+import { LightboxHost } from "@/components/lightbox/host";
 import { HostChooserModal, useHostChooser } from "@/hosts/host-chooser";
 import {
   getIsElectronRuntime,
@@ -558,6 +559,7 @@ function AppContainer({ children, chromeEnabled: chromeEnabledOverride }: AppCon
         </WindowChromeRegion>
       ) : null}
       <FloatingPanelPortalHost />
+      <LightboxHost />
       {isCompactLayout ? sidebarChrome : null}
       <DownloadToast />
       <RosettaCalloutSource />

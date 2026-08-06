@@ -30,6 +30,7 @@ import { getMarkdownListMarker, getMarkdownListSpacing } from "@/utils/markdown-
 import { markdownNodeContainsType } from "@/utils/markdown-ast";
 import { createCompactMarkdownStyles, createMarkdownStyles } from "@/styles/markdown-styles";
 import type { Theme } from "@/styles/theme";
+import { useOpenLightbox } from "@/stores/lightbox-store";
 import { openExternalUrl } from "@/utils/open-external-url";
 import {
   splitHtmlishMarkdown,
@@ -267,6 +268,10 @@ function MarkdownInlineImage({
     void openExternalUrl(part.href);
   }, [onLinkPress, part.href]);
   const source = useMemo(() => ({ uri: part.src }), [part.src]);
+  const openLightbox = useOpenLightbox();
+  const handleOpenLightbox = useCallback(() => {
+    openLightbox({ kind: "uri", uri: part.src, alt: part.alt || undefined });
+  }, [openLightbox, part.alt, part.src]);
   const imageSize = useMemo(
     () => resolveInlineImageSize({ explicit: explicitDimensions, natural: naturalDimensions }),
     [explicitDimensions, naturalDimensions],
@@ -283,7 +288,18 @@ function MarkdownInlineImage({
   );
 
   if (!part.href) {
-    return <View style={detailsStyles.inlineImageWrap}>{image}</View>;
+    // No link to follow, so the press is free to mean "look closer". A linked image keeps the
+    // link: that is what the author wrote.
+    return (
+      <Pressable
+        style={detailsStyles.inlineImageWrap}
+        onPress={handleOpenLightbox}
+        accessibilityRole="button"
+        accessibilityLabel={part.alt || undefined}
+      >
+        {image}
+      </Pressable>
+    );
   }
 
   return (

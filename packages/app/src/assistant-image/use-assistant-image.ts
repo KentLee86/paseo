@@ -11,6 +11,7 @@ import type { ImageLoadEvent } from "react-native";
 import { useTranslation } from "react-i18next";
 import type { DaemonClient } from "@getpaseo/client/internal/daemon-client";
 import type { AttachmentMetadata } from "@/attachments/types";
+import type { LightboxSource } from "@/components/lightbox/source";
 import { isWeb } from "@/constants/platform";
 import { useStableEvent } from "@/hooks/use-stable-event";
 import { retainAttachmentForGarbageCollection } from "@/attachments/gc-retention";
@@ -63,16 +64,32 @@ const renderedDimensions: AssistantImageRenderedDimensionsReader = {
   },
 };
 
+/**
+ * Attachment-backed images hand the lightbox their metadata so it can take its own reference to
+ * the preview URL. A plain http(s) source is not reference counted, so the URI is safe to pass.
+ */
+function resolveLightboxSource(
+  acquired: { status: string; attachment?: AttachmentMetadata },
+  directUri: string | null,
+): LightboxSource | null {
+  if (acquired.status === "loaded" && acquired.attachment) {
+    return { kind: "attachment", metadata: acquired.attachment };
+  }
+  return directUri ? { kind: "uri", uri: directUri } : null;
+}
+
 export type AssistantImageResult =
   | {
       status: "loading";
       binding: AssistantImageRenderBinding | null;
       aspectRatio: number | null;
+      lightbox: LightboxSource | null;
     }
   | {
       status: "loaded";
       binding: AssistantImageRenderBinding;
       aspectRatio: number;
+      lightbox: LightboxSource | null;
     }
   | { status: "failed"; message: string };
 
@@ -412,6 +429,13 @@ export function useAssistantImage({
     dataImageAttachment.status === "loaded" ? dataImageAttachment.attachment : null,
   );
   const directUri = resolution?.kind === "direct" && !dataImage ? resolution.uri : null;
+  // The lightbox needs a source it can hold on its own. Attachment-backed images hand over the
+  // metadata so it can take its own preview-URL reference; a plain http(s) source is not reference
+  // counted, so passing the URI through is safe.
+  const lightboxSource = resolveLightboxSource(
+    dataImage ? dataImageAttachment : fileAttachment,
+    directUri,
+  );
   const preview = dataImage ? dataImagePreview : filePreview;
   const previewUri = preview.status === "loaded" ? preview.uri : null;
   const uri = directUri ?? previewUri;
@@ -531,6 +555,7 @@ export function useAssistantImage({
         onError: handleImageError,
       },
       aspectRatio: lifecycle.aspectRatio,
+      lightbox: lightboxSource,
     };
   }
   if (lifecycle.status === "failed") {
@@ -540,5 +565,6 @@ export function useAssistantImage({
     status: "loading",
     binding,
     aspectRatio: hasCurrentLifecycleUri ? lifecycle.aspectRatio : null,
+    lightbox: lightboxSource,
   };
 }
