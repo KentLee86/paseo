@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import { Modal, Pressable, type StyleProp, Text, View, type ViewStyle } from "react-native";
 import { StyleSheet, withUnistyles } from "react-native-unistyles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { X } from "lucide-react-native";
@@ -9,6 +9,7 @@ import { isWeb } from "@/constants/platform";
 import type { Theme } from "@/styles/theme";
 import { WindowChromeRootRegion, WindowChromeSafeArea } from "@/utils/desktop-window";
 import type { LightboxSource } from "./lightbox/source";
+import { ModalGestureRoot } from "./lightbox/modal-gesture-root";
 import { ZoomSurface } from "./lightbox/zoom-surface";
 
 interface AttachmentLightboxProps {
@@ -68,47 +69,88 @@ export function AttachmentLightbox({ source, onClose }: AttachmentLightboxProps)
 
   return (
     <Modal transparent animationType="fade" statusBarTranslucent visible onRequestClose={onClose}>
-      <WindowChromeRootRegion corners="both">
-        <View style={styles.root}>
-          <Pressable
-            testID="attachment-lightbox-backdrop"
-            accessibilityRole="button"
-            accessibilityLabel={t("message.attachments.dismissImage")}
-            onPress={zoomed ? undefined : onClose}
-            disabled={zoomed}
-            style={styles.backdrop}
-          />
-          <View style={styles.contentLayer}>
-            <View style={styles.imageArea}>
-              {hasError ? (
-                <Text style={styles.errorText}>{t("message.attachments.imageLoadFailed")}</Text>
-              ) : (
-                <View testID="attachment-lightbox-viewport" style={styles.viewport}>
-                  <ZoomSurface
-                    uri={url}
-                    alt={source.alt ?? attachment?.fileName ?? undefined}
-                    onError={handleImageError}
-                    onZoomedChange={setZoomed}
-                  />
-                </View>
-              )}
-            </View>
-            <WindowChromeSafeArea placement="inline" style={closeButtonRowStyle}>
-              <Pressable
-                testID="attachment-lightbox-close"
-                accessibilityRole="button"
-                accessibilityLabel={t("message.attachments.closeImage")}
-                hitSlop={8}
-                onPress={onClose}
-                style={closeButtonStyle}
-              >
-                <ThemedX size={16} uniProps={iconForegroundMutedMapping} />
-              </Pressable>
-            </WindowChromeSafeArea>
+      <ModalGestureRoot>
+        <WindowChromeRootRegion corners="both">
+          <View style={styles.root}>
+            <Pressable
+              testID="attachment-lightbox-backdrop"
+              accessibilityRole="button"
+              accessibilityLabel={t("message.attachments.dismissImage")}
+              onPress={zoomed ? undefined : onClose}
+              disabled={zoomed}
+              style={styles.backdrop}
+            />
+            <LightboxContent
+              hasError={hasError}
+              url={url}
+              alt={source.alt ?? attachment?.fileName ?? undefined}
+              onImageError={handleImageError}
+              onZoomedChange={setZoomed}
+              onClose={onClose}
+              closeButtonRowStyle={closeButtonRowStyle}
+              closeButtonStyle={closeButtonStyle}
+            />
           </View>
-        </View>
-      </WindowChromeRootRegion>
+        </WindowChromeRootRegion>
+      </ModalGestureRoot>
     </Modal>
+  );
+}
+
+interface LightboxContentProps {
+  hasError: boolean;
+  url: string | null;
+  alt: string | undefined;
+  onImageError: () => void;
+  onZoomedChange: (zoomed: boolean) => void;
+  onClose: () => void;
+  closeButtonRowStyle: StyleProp<ViewStyle>;
+  closeButtonStyle: StyleProp<ViewStyle>;
+}
+
+/** Split out of the modal tree so the gesture root does not push the picture past the JSX depth cap. */
+function LightboxContent({
+  hasError,
+  url,
+  alt,
+  onImageError,
+  onZoomedChange,
+  onClose,
+  closeButtonRowStyle,
+  closeButtonStyle,
+}: LightboxContentProps) {
+  const { t } = useTranslation();
+
+  return (
+    <View style={styles.contentLayer}>
+      <View style={styles.imageArea}>
+        {hasError || !url ? (
+          <Text style={styles.errorText}>{t("message.attachments.imageLoadFailed")}</Text>
+        ) : (
+          <View testID="attachment-lightbox-viewport" style={styles.viewport}>
+            <ZoomSurface
+              uri={url}
+              alt={alt}
+              onError={onImageError}
+              onZoomedChange={onZoomedChange}
+              onTap={onClose}
+            />
+          </View>
+        )}
+      </View>
+      <WindowChromeSafeArea placement="inline" style={closeButtonRowStyle}>
+        <Pressable
+          testID="attachment-lightbox-close"
+          accessibilityRole="button"
+          accessibilityLabel={t("message.attachments.closeImage")}
+          hitSlop={8}
+          onPress={onClose}
+          style={closeButtonStyle}
+        >
+          <ThemedX size={16} uniProps={iconForegroundMutedMapping} />
+        </Pressable>
+      </WindowChromeSafeArea>
+    </View>
   );
 }
 
