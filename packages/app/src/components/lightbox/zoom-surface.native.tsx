@@ -125,6 +125,16 @@ export function ZoomSurface({ uri, alt, onError, onZoomedChange, onTap }: ZoomSu
       savedTranslateX.value = translateX.value;
       savedTranslateY.value = translateY.value;
     };
+    /** Whether a point in viewport coordinates lands on the drawn picture rather than beside it. */
+    const isOnPicture = (x: number, y: number) => {
+      "worklet";
+      const halfWidth = (fittedWidth() * scale.value) / 2;
+      const halfHeight = (fittedHeight() * scale.value) / 2;
+      return (
+        Math.abs(x - (viewportWidth.value / 2 + translateX.value)) <= halfWidth &&
+        Math.abs(y - (viewportHeight.value / 2 + translateY.value)) <= halfHeight
+      );
+    };
 
     const pinch = Gesture.Pinch()
       .onStart(saveStart)
@@ -156,6 +166,9 @@ export function ZoomSurface({ uri, alt, onError, onZoomedChange, onTap }: ZoomSu
 
     const doubleTap = Gesture.Tap()
       .numberOfTaps(2)
+      // gesture-handler puts no distance limit on a tap by default, so without this a slow drag
+      // ends as a tap as well as a pan.
+      .maxDistance(TAP_SLOP)
       // Shorter than the 500ms default: a single tap closes the lightbox and has to wait out this
       // window first, and half a second of nothing reads as a dropped tap.
       .maxDelay(250)
@@ -185,12 +198,15 @@ export function ZoomSurface({ uri, alt, onError, onZoomedChange, onTap }: ZoomSu
       });
 
     // Close-on-tap cannot be left to the backdrop underneath: once a detector owns this area a
-    // single tap is consumed here, so the lightbox hands its dismiss down as `onTap`.
+    // single tap is consumed here, so the lightbox hands its dismiss down as `onTap`. Only taps
+    // beside the picture dismiss — landing on the picture itself is how you look at it, and
+    // `contentFit="contain"` usually leaves generous letterbox margins to aim at.
     const singleTap = Gesture.Tap()
       .numberOfTaps(1)
-      .onEnd((_event, success) => {
+      .maxDistance(TAP_SLOP)
+      .onEnd((event, success) => {
         if (!success || !onTap) return;
-        if (scale.value > MIN_SCALE + ZOOMED_EPSILON) return;
+        if (isOnPicture(event.x, event.y)) return;
         scheduleOnRN(onTap);
       });
 
@@ -245,6 +261,8 @@ export function ZoomSurface({ uri, alt, onError, onZoomedChange, onTap }: ZoomSu
 
 /** Scale is float; a pinch that settles on 1.0000001 must not read as zoomed. */
 const ZOOMED_EPSILON = 0.01;
+/** How far a finger may drift and still count as a tap rather than the start of a pan. */
+const TAP_SLOP = 12;
 const TIMING = { duration: 180 } as const;
 
 const fillStyle = { flex: 1 } as const;
