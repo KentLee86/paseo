@@ -390,12 +390,18 @@ function FilePreviewBody({
           contentContainerStyle={styles.previewImageScrollContent}
           showsVerticalScrollIndicator
         >
+          {/*
+            The wrapper has to carry the width. Its content sizes itself as a percentage of it, so
+            leaving it `auto` inside this centred container collapses both to zero — an invisible
+            image with no hit area.
+          */}
           <Pressable
             testID="file-pane-image-open"
             accessibilityRole={imageAttachment ? "button" : "image"}
             accessibilityLabel={t("panels.file.openImage")}
             disabled={!imageAttachment}
             onPress={handleOpenImage}
+            style={styles.previewImagePressable}
           >
             <RNImage
               source={imageSource ?? undefined}
@@ -912,6 +918,9 @@ const styles = StyleSheet.create((theme) => ({
     padding: theme.spacing[4],
     alignItems: "center",
     justifyContent: "center",
+  },
+  previewImagePressable: {
+    width: "100%",
   },
   previewImage: {
     width: "100%",
