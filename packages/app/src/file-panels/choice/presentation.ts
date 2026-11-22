@@ -4,6 +4,7 @@ import type { FilePanel } from "../panels";
 import { parseFilePanelSelectorKey } from "../resolve";
 
 const BUILTIN_PRESENTATION = {
+  "builtin:pdf": { title: "PDF", icon: "FileText" },
   "builtin:markdown": { title: "markdown", icon: "FileText" },
   "builtin:html": { title: "html", icon: "FileCode" },
   "builtin:image": { title: "image", icon: "Image" },
@@ -16,6 +17,7 @@ export function filePanelIcon(panel: FilePanel): PluginIcon {
 
 /** "Markdown", "Rich Markdown": the panel's title. */
 export function filePanelTitle(t: TFunction, panel: FilePanel): string {
+  if (panel.id === "builtin:pdf") return "PDF";
   return panel.builtin
     ? t(`panels.file.filePanels.builtin.${BUILTIN_PRESENTATION[panel.id].title}`)
     : panel.plugin.i18n.resolve(panel.contribution.title, panel.plugin.locale);
