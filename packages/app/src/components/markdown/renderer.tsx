@@ -1,3 +1,4 @@
+import { MathParagraph, splitMath } from "./android-math";
 import { memo, useMemo, useState } from "react";
 import { EnrichedMarkdownText, type LinkPressEvent } from "react-native-enriched-markdown";
 import { withUnistyles } from "react-native-unistyles";
@@ -150,7 +151,9 @@ const MarkdownPart = memo(function MarkdownPart({
   const closeImage = useStableEvent(() => setImage(null));
   const segments = useMemo(
     () =>
-      isWeb ? [{ kind: "markdown", id: "0", source: markdown }] : splitMermaidFences(markdown),
+      isWeb ? [{ kind: "markdown", id: "0", source: markdown }] : splitMermaidFences(markdown).flatMap(segment =>
+        segment.kind === "mermaid" ? [segment] : splitMath(segment.source).map((part, i) => ({ ...part, id: `${segment.id}:${i}` }))
+      ),
     [markdown],
   );
   return (
@@ -159,6 +162,8 @@ const MarkdownPart = memo(function MarkdownPart({
         {segments.map((segment) =>
           segment.kind === "mermaid" ? (
             <MermaidFence key={`${segment.kind}:${segment.id}`} code={segment.source} />
+          ) : segment.kind === "math" ? (
+            <MathParagraph key={segment.id} html={segment.source} />
           ) : (
             <ThemedMarkdown
               key={`${segment.kind}:${segment.id}`}
