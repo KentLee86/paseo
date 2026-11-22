@@ -82,6 +82,8 @@ export function ZoomableImage({
         fadeDuration={0}
         onError={onError}
         onLoad={handleLoad}
+        // Keep fine detail on zoom; let Fresco subsample unusually large bitmaps.
+        resizeMethod={resolvedSize.width * resolvedSize.height <= 24_000_000 ? "none" : "auto"}
         resizeMode="contain"
         source={source}
         style={styles.image}
