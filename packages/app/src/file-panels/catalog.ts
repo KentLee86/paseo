@@ -1,6 +1,7 @@
 import type { FilePanelCandidate } from "./resolve";
 
 const renderingPanels = [
+  { id: "builtin:pdf", builtin: true, files: { extensions: ["pdf"] } },
   {
     id: "builtin:markdown",
     builtin: true,

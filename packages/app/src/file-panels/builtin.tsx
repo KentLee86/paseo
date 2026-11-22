@@ -7,6 +7,7 @@ import { useSessionStore } from "@/stores/session-store";
 import { FileHtmlPreview } from "./html-preview";
 import { FilePanelLoading } from "./loading";
 import { FileMarkdownPreview } from "./markdown-preview";
+import { PdfPanel } from "./pdf/panel";
 import { TextFilePanel, type TextFilePreviewProps } from "./source/panel";
 import type { RenderingFilePanel, SourceFilePanel } from "./catalog";
 
@@ -74,6 +75,7 @@ function FilePanelError({ message }: { message: string }) {
 }
 
 const components = {
+  "builtin:pdf": PdfPanel,
   "builtin:markdown": MarkdownPanel,
   "builtin:html": HtmlPanel,
   "builtin:image": ImagePanel,

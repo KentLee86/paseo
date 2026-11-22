@@ -1,0 +1,6 @@
+{
+  "name": "paseo-pdf-runtime-build",
+  "private": true,
+  "scripts": { "build": "node build-runtime.mjs" },
+  "devDependencies": { "esbuild": "0.27.3", "pdfjs-dist": "5.4.624" }
+}
